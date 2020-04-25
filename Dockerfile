@@ -23,6 +23,8 @@ RUN curl -O https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
                    --with-cc-opt='-Os -fomit-frame-pointer' --with-ld-opt=-Wl,--as-needed \
     && make && make install && cd .. && rm -rf ./nginx-${NGINX_VERSION}
 
+COPY nginx.conf /etc/nginx/nginx.conf
+
 RUN groupadd --force --system --gid 101 nginx && useradd --system -g nginx --no-create-home --home /nonexistent --shell /bin/false --non-unique --uid 101 nginx
 
 RUN mkdir -p /var/cache/nginx

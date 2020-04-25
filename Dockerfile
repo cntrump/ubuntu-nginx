@@ -1,10 +1,16 @@
-FROM cntrump/ubuntu-toolchains:latest
+FROM ubuntu:20.04 AS base
 
-ARG NGINX_VERSION=1.18.0
+ENV DEBIAN_FRONTEND=noninteractive
 
 ARG DEP_PKGS="libpcre3-dev libperl-dev"
 
 RUN apt-get update && apt-get install ${DEP_PKGS} -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+FROM cntrump/ubuntu-toolchains:latest AS builder
+
+COPY --from=base / /
+
+ARG NGINX_VERSION=1.18.0
 
 RUN curl -O https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
     && tar -zxvf ./nginx-${NGINX_VERSION}.tar.gz && rm ./nginx-${NGINX_VERSION}.tar.gz \
@@ -25,6 +31,16 @@ RUN curl -O https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
 
 COPY nginx.conf /etc/nginx/nginx.conf
 
+FROM base
+
+ENV LD_LIBRARY_PATH /usr/local/lib:/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
+COPY --from=builder /etc/nginx /etc/nginx
+COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
+COPY --from=builder /var/log/nginx /var/log/nginx
+COPY --from=builder /usr/local/lib/libssl.so* /usr/local/lib/
+COPY --from=builder /usr/local/lib/libcrypto.so* /usr/local/lib/
+
 RUN groupadd --force --system --gid 101 nginx && useradd --system -g nginx --no-create-home --home /nonexistent --shell /bin/false --non-unique --uid 101 nginx
 
 RUN mkdir -p /var/cache/nginx
@@ -33,6 +49,6 @@ EXPOSE 80
 
 EXPOSE 443
 
-RUN /usr/sbin/nginx -t && /usr/sbin/nginx -V
+RUN ldd /usr/sbin/nginx && /usr/sbin/nginx -t && /usr/sbin/nginx -V
 
 CMD ["/usr/sbin/nginx", "-g", "daemon off;"]

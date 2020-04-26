@@ -1,12 +1,10 @@
-FROM ubuntu:20.04 AS base
-
-ENV DEBIAN_FRONTEND=noninteractive
+FROM cntrump/ubuntu-template:20.04 AS base
 
 ARG DEP_PKGS="libpcre3-dev libperl-dev"
 
 RUN apt-get update && apt-get install ${DEP_PKGS} -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-FROM cntrump/ubuntu-toolchains:latest AS builder
+FROM cntrump/ubuntu-toolchains:20.04 AS builder
 
 COPY --from=base / /
 
@@ -32,8 +30,6 @@ RUN curl -O https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
 COPY nginx.conf /etc/nginx/nginx.conf
 
 FROM base
-
-ENV LD_LIBRARY_PATH /usr/local/lib:/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 COPY --from=builder /etc/nginx /etc/nginx
 COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx

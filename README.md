@@ -2,7 +2,7 @@
 
 Base on Ubuntu 20.04
 
-Nginx 1.18.0
+Nginx version 1.18.0, build with clang 10.
 
 
 ## Docker Image

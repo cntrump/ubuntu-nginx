@@ -8,12 +8,17 @@ FROM cntrump/ubuntu-toolchains:20.04 AS builder
 
 COPY --from=base / /
 
+ENV CC=/usr/bin/clang-10
+ENV CPP=/usr/bin/clang-cpp-10
+ENV CXX=/usr/bin/clang++-10
+ENV LD=/usr/bin/ld.lld-10
+
 ARG NGINX_VERSION=1.18.0
 
 RUN curl -O https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
     && tar -zxvf ./nginx-${NGINX_VERSION}.tar.gz && rm ./nginx-${NGINX_VERSION}.tar.gz \
     && cd ./nginx-${NGINX_VERSION} \
-    && CC=/usr/bin/clang-10 ./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx --modules-path=/usr/lib/nginx/modules \
+    && ./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx --modules-path=/usr/lib/nginx/modules \
                    --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log \
                    --pid-path=/var/run/nginx.pid --lock-path=/var/run/nginx.lock --http-client-body-temp-path=/var/cache/nginx/client_temp \
                    --http-proxy-temp-path=/var/cache/nginx/proxy_temp --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \

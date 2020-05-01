@@ -8,11 +8,6 @@ FROM cntrump/ubuntu-toolchains:20.04 AS builder
 
 COPY --from=base / /
 
-ENV CC=/usr/bin/clang-10
-ENV CPP=/usr/bin/clang-cpp-10
-ENV CXX=/usr/bin/clang++-10
-ENV LD=/usr/bin/ld.lld-10
-
 ARG NGINX_VERSION=1.18.0
 
 RUN curl -O https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
@@ -43,13 +38,11 @@ COPY --from=builder /usr/local/lib/libssl.so* /usr/local/lib/
 COPY --from=builder /usr/local/lib/libcrypto.so* /usr/local/lib/
 
 RUN groupadd --force --system --gid 101 nginx && useradd --system -g nginx --no-create-home --home /nonexistent --shell /bin/false --non-unique --uid 101 nginx
-
-RUN mkdir -p /var/cache/nginx
+RUN mkdir -p /var/cache/nginx && mkdir /opt/www
 
 EXPOSE 80
-
 EXPOSE 443
 
-RUN ldd /usr/sbin/nginx && /usr/sbin/nginx -t && /usr/sbin/nginx -V
+RUN ldconfig && ldd /usr/sbin/nginx && nginx -t && nginx -V
 
 CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
